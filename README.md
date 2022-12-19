@@ -4,18 +4,18 @@ Official tensorflow implementation of "Improving LiDAR Fidelity Using Temporal I
 This research reviews the infill of vehicle-based occlusions common with ground LiDAR collection for the purpose of HD Map creation for Autonomous Driving. We propose a novel data preparation to convert 4D LiDAR to two-channel, 2.5D imagery. Our preparation pipeline provides the means to create randomized vehicle occlusion patterns accurately across a stack of contiguous Bird's Eye View imagery. We call our work Temporal Infill. Included are all of the networks tested during our research, and we found our final network configuration achieves highly accurate results in both Depth and Reflectance channels.
 
 ## Source Code
-main_1st.py     -- The top-level python script to run for training for the Coarse model. This allows the user to select the network configuration.\
-main_2nd.py     -- The top-level python script to run for training for the Refinement model. This requires a trained Coarse model to produce intermediate dense estimations.\
+main_1st.py     -- The top-level python script to run for training for the Coarse model.\
+main_2nd.py     -- The top-level python script to run for training for the Refinement model. Requires Coarse model in --model-dir.\
 command_line.py -- The command line arguments for the program. This allows different permutations to be changed at runtime.\
-pipeline.py     -- The data pipeline ingest for the training/validation data
-train.py        -- The training routine with learning plateaus.
-unet_2Df_2Df.py -- Full 2D Encoder, Full 2D Decoders -- Coarse Network 
-unet_2Df_3Df.py -- Full 2D Encoder, Full 3D Decoders -- Coarse Network
-unet_2Df_3Dp.py -- Full 2D Encoder, Partial 3D Decoders -- Coarse Network
-unet_3Df_2Df.py -- Full 3D Encoder, Full 2D Decoders -- Coarse Network
-unet_3Df_3Df.py -- Full 3D Encoder, Full 3D Decoders -- Coarse Network
-unet_3Df_3Dp.py -- Full 3D Encoder, Partial 3D Decoders -- Coarse Network
-unet_2nd.py     -- The Refinement Network.
+pipeline.py     -- The data pipeline ingest for the training/validation data.\
+train.py        -- The training routine with learning plateaus.\
+unet_2Df_2Df.py -- Full 2D Encoder, Full 2D Decoders -- Coarse Network.\
+unet_2Df_3Df.py -- Full 2D Encoder, Full 3D Decoders -- Coarse Network.\
+unet_2Df_3Dp.py -- Full 2D Encoder, Partial 3D Decoders -- Coarse Network.\
+unet_3Df_2Df.py -- Full 3D Encoder, Full 2D Decoders -- Coarse Network.\
+unet_3Df_3Df.py -- Full 3D Encoder, Full 3D Decoders -- Coarse Network.\
+unet_3Df_3Dp.py -- Full 3D Encoder, Partial 3D Decoders -- Coarse Network.\
+unet_2nd.py     -- The Refinement Network.\
 
 ### Example Command Lines:
 
