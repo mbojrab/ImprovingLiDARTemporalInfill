@@ -36,39 +36,6 @@ class ModelUpdateCallback(tf.keras.callbacks.LambdaCallback):
         self.model.global_step.assign_add(1)
 
 
-class _GatedConv2D(_LayerSequence):
-
-    def __init__(self, kernels, kernel_size, strides, l2_reg, activation=None, depth_multiplier=3, name=''):
-        _LayerSequence.__init__(self, name=name)
-        if depth_multiplier is not None:
-            self._seq.extend([tf.keras.layers.SeparableConv2D(filters=kernels, kernel_size=kernel_size, padding='same',
-                                                              strides=strides, depth_multiplier=depth_multiplier,
-                                                              depthwise_initializer='he_uniform',
-                                                              pointwise_initializer='he_uniform',
-                                                              depthwise_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                              pointwise_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                              activation=activation),
-                              tf.keras.layers.SeparableConv2D(filters=kernels, kernel_size=kernel_size, padding='same',
-                                                              strides=strides, depth_multiplier=depth_multiplier,
-                                                              depthwise_initializer='he_uniform',
-                                                              pointwise_initializer='he_uniform',
-                                                              depthwise_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                              pointwise_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                              activation=tf.nn.sigmoid)])
-        else:
-            self._seq.extend([tf.keras.layers.Conv2D(filters=kernels, kernel_size=kernel_size, padding='same',
-                                                     strides=strides, kernel_initializer='he_uniform',
-                                                     kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                     activation=activation),
-                              tf.keras.layers.Conv2D(filters=kernels, kernel_size=kernel_size, padding='same',
-                                                     strides=strides, kernel_initializer='uniform',
-                                                     kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
-                                                     activation=tf.nn.sigmoid)])
-
-    def call(self, features):
-        return self._seq[0](features) * self._seq[1](features)
-
-
 class _Block(_LayerSequence):
 
     def __init__(self, kernels, kernel_size, strides=1, depth_multiplier=3, l2_reg=0.0, activation=None, name=''):
@@ -78,7 +45,7 @@ class _Block(_LayerSequence):
         # NOTE: Deconvolution is performed in a separate convolutional layer in order to remedy the artifacting
         #       resulting from upsampled convolutions. Performing a second convolution on its heals, ensures the
         #       artifacts are learned and undone. This is a common approach to this documented issue.
-        self._seq.extend([_GatedConv2D(kernels, kernel_size, strides, l2_reg, None, depth_multiplier),
+        self._seq.extend([tf.keras.layers.Conv2D(kernels, kernel_size, strides, l2_reg, None, depth_multiplier),
                           tf.keras.layers.BatchNormalization(),
                           activation])
 
@@ -99,13 +66,13 @@ class _BlockSequence(_LayerSequence):
                                                           kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
                                                           bias_regularizer=tf.keras.regularizers.l2(l2_reg))]
                           if dilates != 1 else
-                         [_GatedConv2D(kernels, kernel_size, strides, l2_reg, None, depth_multiplier)] +
+                         [tf.keras.layers.Conv2D(kernels, kernel_size, strides, l2_reg, None, depth_multiplier)] +
                          [tf.keras.layers.BatchNormalization(),
                           activation,
-                          _GatedConv2D(kernels, 5, 1, l2_reg, None, depth_multiplier),
+                          tf.keras.layers.Conv2D(kernels, 5, 1, l2_reg, None, depth_multiplier),
                           tf.keras.layers.BatchNormalization(),
                           activation,
-                          _GatedConv2D(kernels, 5, 1, l2_reg, None, depth_multiplier),
+                          tf.keras.layers.Conv2D(kernels, 5, 1, l2_reg, None, depth_multiplier),
                           tf.keras.layers.BatchNormalization(),
                           activation])
 
@@ -121,7 +88,7 @@ class _FinalBlock(_LayerSequence):
                                                           bias_initializer='he_uniform',
                                                           kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
                                                           activation=tf.keras.layers.LeakyReLU()),
-                          _GatedConv2D(kernels, 5, 1, l2_reg, depth_multiplier=depth_multiplier,
+                          tf.keras.layers.Conv2D(kernels, 5, 1, l2_reg, depth_multiplier=depth_multiplier,
                                        activation=tf.keras.layers.LeakyReLU())])
 
 
@@ -136,7 +103,7 @@ class _Encoder(_LayerSequence):
             assert len(kernels) == len(strides), 'The length of strides does not match. This is invalid'
         else:
             strides = [(1, 1) for _ in kernels]
-        self._seq.extend([_GatedConv2D(k, ks, s, l2_reg, tf.keras.layers.LeakyReLU(), depth_multiplier)
+        self._seq.extend([tf.keras.layers.Conv2D(k, ks, s, l2_reg, tf.keras.layers.LeakyReLU(), depth_multiplier)
                           for ii, (k, ks, s) in enumerate(zip(kernels, kernel_size, strides))])
 
     def call(self, features):
@@ -167,7 +134,7 @@ class _Decoder(_LayerSequence):
                                      depth_multiplier=depth_multiplier, l2_reg=l2_reg))
 
         # add the pointwise squashing layer
-        self.squash_layer = _GatedConv2D(num_channels, 1, 1, l2_reg, _SoftPlus(), depth_multiplier)
+        self.squash_layer = tf.keras.layers.Conv2D(num_channels, 1, 1, l2_reg, _SoftPlus(), depth_multiplier)
 
     # @tf.function
     def call(self, features):
