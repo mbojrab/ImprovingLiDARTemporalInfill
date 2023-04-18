@@ -38,8 +38,8 @@ unet_2nd.py     -- The Refinement Network.\
 *--noise tuple to select the amount of Gaussian noise to add to the Coarse output per channel.*
 
 ## The Data
-We provide the jpgs/pkl files for our data, and pipeline.py provides code to read and prepare the training data. The records are too large for github, so they must be downloaded separately:
+We provide the jpgs/pkl files for our data, and pipeline.py provides code to read and prepare the training data. The records are stored in a separate repository for convenience:
 
-[Download Dataset Now - 1.9 GB](https://improving-lidar-fidelity.s3.us-east-2.amazonaws.com/using/temporal-infill.zip)
+[Download Dataset Now - 1.9 GB](https://github.com/mbojrab/ImprovingLiDARTemporalInfillData)
 
-Unzip into ./ImprovingLiDARTemporalInfill/data/*
+Clone into ./ImprovingLiDARTemporalInfill/data/*
